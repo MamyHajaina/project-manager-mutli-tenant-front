@@ -24,7 +24,8 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              }
+              },
+              "src/assets"
             ],
             "styles": [
               "src/assets/vendor/bootstrap/css/bootstrap.min.css",
@@ -87,7 +88,8 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              }
+              },
+              "src/assets"
             ],
             "styles": [
               "src/assets/vendor/bootstrap/css/bootstrap.min.css",
