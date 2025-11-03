@@ -1,0 +1,82 @@
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <h4 class="mb-0">Users</h4>
+  <span class="text-muted small">({{ view().length }} / {{ users().length }})</span>
+  <button class="btn btn-sm btn-outline-secondary ms-auto" (click)="load()" [disabled]="loading()">
+    <i class="bi bi-arrow-clockwise"></i> Reload
+  </button>
+</div>
+
+<div class="row g-2 mb-3">
+  <div class="col-md-6">
+    <input class="form-control" type="search" placeholder="Search name or email…" [(ngModel)]="q">
+  </div>
+  <div class="col-md-3">
+    <select class="form-select" [(ngModel)]="role">
+      <option *ngFor="let r of roles" [ngValue]="r">{{ r }}</option>
+    </select>
+  </div>
+</div>
+
+<!-- Loading skeleton -->
+<div *ngIf="loading()" class="skeleton card p-3 mb-0">
+  <div class="placeholder-glow">
+    <span class="placeholder col-12 mb-2"></span>
+    <span class="placeholder col-10 mb-2"></span>
+    <span class="placeholder col-11"></span>
+  </div>
+</div>
+
+<div *ngIf="error()" class="alert alert-danger my-2">{{ error() }}</div>
+
+<!-- Empty state -->
+<div *ngIf="!loading() && !error() && view().length === 0" class="alert alert-warning">
+  No users match your filters.
+</div>
+
+<table *ngIf="!loading() && !error() && view().length"
+  class="table table-sm table-striped align-middle table-hover users-table">
+  <thead>
+    <tr>
+      <th class="w-1">#</th>
+      <th role="button" (click)="toggleSort('fullName')">
+        Full name
+        <i class="bi" [ngClass]="sortBy()==='fullName' && sortDir()==='asc' ? 'bi-caret-up-fill' :
+                                  sortBy()==='fullName' && sortDir()==='desc' ? 'bi-caret-down-fill' : ''"></i>
+      </th>
+      <th role="button" (click)="toggleSort('email')">
+        Email
+        <i class="bi" [ngClass]="sortBy()==='email' && sortDir()==='asc' ? 'bi-caret-up-fill' :
+                                  sortBy()==='email' && sortDir()==='desc' ? 'bi-caret-down-fill' : ''"></i>
+      </th>
+      <th>Role</th>
+      <th role="button" (click)="toggleSort('createdAt')">
+        Created
+        <i class="bi" [ngClass]="sortBy()==='createdAt' && sortDir()==='asc' ? 'bi-caret-up-fill' :
+                                  sortBy()==='createdAt' && sortDir()==='desc' ? 'bi-caret-down-fill' : ''"></i>
+      </th>
+      <th class="text-end">Actions</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <tr *ngFor="let u of view(); index as i; trackBy: trackRow">
+      <td>{{ i + 1 }}</td>
+      <td class="text-truncate" style="max-width: 220px">
+        {{ u.fullName || '—' }}
+      </td>
+      <td class="text-truncate" style="max-width: 280px" title="{{ u.email }}">{{ u.email }}</td>
+      <td>
+        <span class="badge" [class]="roleBadge(u.role)">{{ u.role }}</span>
+      </td>
+      <td>
+        <span class="d-block">{{ u.createdAt | date:'yyyy-MM-dd HH:mm' }}</span>
+        <small class="text-muted">{{ u.createdAt ? (u.createdAt | date:'mediumDate') : '—' }}</small>
+      </td>
+      <td class="text-end">
+        <a [routerLink]="['/admin/users', u.id]" class="btn btn-sm btn-outline-primary">
+          Details
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>

@@ -1,0 +1,5 @@
+.header { height: 60px; box-shadow: 0 2px 12px rgba(0,0,0,.05); z-index: 1030; }
+.sidebar { width: 240px; background: #fff; border-right: 1px solid #eee; padding-top: 70px; min-height: 100vh; }
+.main { padding-left: 0; }
+@media(min-width: 992px){ .main{ padding-left: 240px; } }
+.nav-link.active, .nav-link:hover { background: #f6f9ff; color: #4154f1; }

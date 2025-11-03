@@ -1,0 +1,4 @@
+/* features/user/project/project.css */
+:host { display: block; }
+.card { border-radius: 1rem; }
+.badge { font-weight: 600; }

@@ -1,0 +1,107 @@
+<!-- details.html -->
+<div class="d-flex align-items-center gap-2 mb-3">
+  <a routerLink="/admin/users" class="btn btn-sm btn-outline-secondary">&larr; Back</a>
+  <h4 class="mb-0">User details</h4>
+</div>
+
+<div *ngIf="loading()" class="alert alert-info">Loading…</div>
+<div *ngIf="error()" class="alert alert-danger">{{ error() }}</div>
+
+<div *ngIf="!loading()">
+
+  <!-- Formulaire lecture seule (rempli depuis le JSON) -->
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">Multi Columns Form (readonly)</h5>
+
+      <form class="row g-3" [formGroup]="form">
+        <div class="col-md-6">
+          <label class="form-label">First name</label>
+          <input type="text" class="form-control" formControlName="firstName" readonly
+            placeholder="{{ this.userData().firstName }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Last name</label>
+          <input type="text" class="form-control" formControlName="lastName" readonly
+            placeholder="{{ this.userData().lastName }}">
+        </div>
+
+        <div class="col-md-6">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" formControlName="email" readonly
+            placeholder="{{ this.userData().email }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Role</label>
+          <input type="text" class="form-control" formControlName="role" readonly
+            placeholder="{{ this.userData().role }}">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Created at</label>
+          <input type="text" class="form-control" placeholder="{{ this.userData().createdAt }}" readonly>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="card mt-3">
+    <div class="card-body">
+      <h5 class="card-title mb-3">Assigner une organisation</h5>
+
+      <div *ngIf="assignError()" class="alert alert-danger py-2">{{ assignError() }}</div>
+      <div *ngIf="assignSuccess()" class="alert alert-success py-2">{{ assignSuccess() }}</div>
+
+      <div class="row g-2 align-items-end">
+        <div class="col-md-8">
+          <label class="form-label">Organisation</label>
+          <select class="form-select" [disabled]="assignSubmitting() || !unassignedOrgs().length"
+            [ngModel]="selectedOrgId()" (ngModelChange)="selectedOrgId.set($event)">
+            <option [ngValue]="null" disabled>— Sélectionner —</option>
+            <option *ngFor="let org of unassignedOrgs()" [ngValue]="org.id">
+              {{ org.name }} (slug: {{ org.slug }})
+            </option>
+          </select>
+          <div *ngIf="!unassignedOrgs().length" class="form-text text-muted">
+            Toutes les organisations disponibles sont déjà assignées à cet utilisateur.
+          </div>
+        </div>
+
+        <div class="col-md-4 d-grid">
+          <button class="btn btn-primary" (click)="submitAssignedOrg()"
+            [disabled]="assignSubmitting() || selectedOrgId()===null">
+            <i class="bi" [ngClass]="assignSubmitting() ? 'bi-hourglass-split' : 'bi-plus-circle'"></i>
+            Assigner
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Liste de TOUTES les organisations -->
+  <div class="card mt-3">
+    <div class="card-body">
+      <h5 class="card-title mb-3">Organizations</h5>
+
+      <div *ngIf="!organizationsByUser().length" class="text-muted">No organization assigned.</div>
+
+      <div class="row row-cols-1 row-cols-md-4 g-3" *ngIf="organizationsByUser().length">
+        <div class="col" *ngFor="let org of organizationsByUser()">
+          <div class="card h-100">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div>
+                  <div class="fw-semibold">{{ org.name }}</div>
+                  <div class="text-muted small">slug: {{ org.slug }}</div>
+                </div>
+                <span class="badge bg-outline-secondary">#{{ org.id }}</span>
+              </div>
+            </div>
+            <div class="card-footer text-muted small">
+              Created: {{ org.createdAt | date:'medium' }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

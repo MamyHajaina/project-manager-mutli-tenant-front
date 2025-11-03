@@ -1,13 +1,13 @@
 import { Injectable, inject } from '@angular/core';
-import {delay, Observable, of, throwError} from 'rxjs';
-import {HttpClient} from '@angular/common/http';
-import {environment} from '../../../environments/environment';
-import {LoginRequest, ServerLoginResponse} from './auth.types';
+import { delay, Observable, of, throwError } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
+import { LoginRequest, ServerLoginResponse } from './auth.types';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
-  private base = environment.apiUrl;
+  private base = environment.API_BASE_URL;
 
   login(payload: LoginRequest): Observable<ServerLoginResponse> {
     return this.http.post<ServerLoginResponse>(`${this.base}/auth/login`, payload, {

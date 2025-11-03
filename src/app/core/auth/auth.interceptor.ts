@@ -14,7 +14,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
 
   const token = auth.accessToken();
-  const isApi = req.url.startsWith(environment.apiUrl);
+  const isApi = req.url.startsWith(environment.API_BASE_URL);
 
   const skipAuth =
     req.headers.has('X-Skip-Auth') ||
