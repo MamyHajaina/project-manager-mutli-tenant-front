@@ -78,6 +78,8 @@ export class ProjectComponent implements OnInit {
     this.svc.listByOrg(orgId).subscribe({
       next: (res) => {
         this.projects = res?.data ?? [];
+        console.log("this.projects", this.projects);
+
         this.loading.set(false);
       },
       error: (err) => {
@@ -119,11 +121,11 @@ export class ProjectComponent implements OnInit {
   /** Badge CSS par status */
   statusBadge(s: ProjectStatus): string {
     switch (s) {
-      case 'PLANNED': return 'badge text-bg-secondary';
-      case 'IN_PROGRESS': return 'badge text-bg-primary';
-      case 'DONE': return 'badge text-bg-success';
-      case 'CANCELLED': return 'badge text-bg-danger';
-      default: return 'badge text-bg-secondary';
+      case 'PLANNED': return 'badge bg-secondary';
+      case 'IN_PROGRESS': return 'badge bg-primary';
+      case 'DONE': return 'badge bg-success';
+      case 'CANCELLED': return 'badge bg-danger';
+      default: return 'badge bg-secondary';
     }
   }
 

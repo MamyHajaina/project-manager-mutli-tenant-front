@@ -90,6 +90,7 @@
             <th>Nom</th>
             <th>Statut</th>
             <th>Organisation</th>
+            <th>Description</th>
             <th>Créé le</th>
           </tr>
         </thead>
@@ -101,6 +102,7 @@
               <span [class]="statusBadge(p.project?.status)">{{ p.project?.status }}</span>
             </td>
             <td>{{ p.organization?.name }}</td>
+            <td>{{ p.project?.description }}</td>
             <td>{{ p.project?.createdAt | date:'medium' }}</td>
           </tr>
 
