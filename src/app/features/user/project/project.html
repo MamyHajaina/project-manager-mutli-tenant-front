@@ -8,7 +8,7 @@
 <!-- Formulaire de création -->
 <div class="card mb-4">
   <div class="card-body p-4">
-    <form [formGroup]="form" (ngSubmit)="submit()" class="row g-3">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="row g-3" novalidate>
       <div class="col-md-4">
         <label class="form-label">Nom du projet</label>
         <input class="form-control" formControlName="name" placeholder="Ex: Backoffice V2">
@@ -18,9 +18,12 @@
       </div>
 
       <div class="col-md-4">
-        <label class="form-label">Organization</label>
-        <select class="form-select" formControlName="organizationID">
-          <option value="{{org.id}}" *ngFor="let org of organizations">{{org.name}}</option>
+        <label class="form-label">Organisation</label>
+        <select class="form-select" formControlName="organizationID" [disabled]="!organizationsByUser.length">
+          <option [value]="0" disabled *ngIf="!organizationsByUser.length">Aucune organisation disponible</option>
+          <option *ngFor="let org of organizationsByUser; trackBy: trackById" [value]="org.id">
+            {{ org.name }}
+          </option>
         </select>
       </div>
 
@@ -30,8 +33,9 @@
           <option value="PLANNED">PLANNED</option>
           <option value="IN_PROGRESS">IN_PROGRESS</option>
           <option value="DONE">DONE</option>
-          <option value="ON_HOLD">ON_HOLD</option>
           <option value="CANCELLED">CANCELLED</option>
+          <!-- Si ton enum inclut ON_HOLD, dé-commente: -->
+          <!-- <option value="ON_HOLD">ON_HOLD</option> -->
         </select>
       </div>
 
@@ -39,32 +43,40 @@
         <label class="form-label">Description</label>
         <textarea class="form-control" rows="3" formControlName="description"
           placeholder="Objectifs, scope, jalons…"></textarea>
+        <div class="invalid-feedback d-block"
+          *ngIf="form.controls.description.invalid && form.controls.description.touched">
+          Description requise (min 10 caractères)
+        </div>
       </div>
 
       <div class="col-12 d-flex gap-2">
-        <button class="btn btn-primary" type="submit" [disabled]="loading()">Créer</button>
-        <button class="btn btn-outline-secondary" type="button" (click)="fetch()"
-          [disabled]="loading()">Rafraîchir</button>
+        <button class="btn btn-primary" type="submit" [disabled]="loading() || !organizationsByUser.length">
+          Créer
+        </button>
+        <button class="btn btn-outline-secondary" type="button" (click)="fetch()" [disabled]="loading()">
+          Rafraîchir
+        </button>
         <div class="ms-auto text-muted" *ngIf="loading()">Chargement…</div>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Liste des projets -->
-<!-- projects.page.html -->
+<!-- Filtres -->
 <div class="row">
   <div class="col-md-3 mb-3">
-    <label class="form-label">Organization</label>
+    <label class="form-label">Organisation</label>
+    <!-- select indépendant du form: filtre de la liste -->
     <select class="form-select" [ngModel]="orgId()" (ngModelChange)="onOrgChange($event)">
       <option [ngValue]="0">Toutes</option>
-      <option *ngFor="let org of organizations" [ngValue]="org.id">
+      <option *ngFor="let org of organizationsByUser; trackBy: trackById" [ngValue]="org.id">
         {{ org.name }}
       </option>
     </select>
-
   </div>
 </div>
+
+<!-- Liste des projets -->
 <div class="card p-3">
   <div class="card-body">
     <div *ngIf="loading()" class="alert alert-info">Chargement…</div>
@@ -75,19 +87,21 @@
         <thead>
           <tr>
             <th>#</th>
-            <th>Name</th>
-            <th>Status</th>
-            <th>Organization</th>
-            <th>Created at</th>
+            <th>Nom</th>
+            <th>Statut</th>
+            <th>Organisation</th>
+            <th>Créé le</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let p of projects; index as i">
             <td>{{ i + 1 }}</td>
-            <td class="fw-semibold">{{ p.project.name }}</td>
-            <td>{{ p.project.status }}</td>
-            <td>{{ p.organization.name }}</td>
-            <td>{{ p.project.createdAt | date:'medium' }}</td>
+            <td class="fw-semibold">{{ p.project?.name }}</td>
+            <td>
+              <span [class]="statusBadge(p.project?.status)">{{ p.project?.status }}</span>
+            </td>
+            <td>{{ p.organization?.name }}</td>
+            <td>{{ p.project?.createdAt | date:'medium' }}</td>
           </tr>
 
           <tr *ngIf="!projects.length">

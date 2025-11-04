@@ -1,10 +1,16 @@
-// features/user/project/project.ts
-import { ChangeDetectionStrategy, Component, effect, inject, OnInit, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  effect,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { ProjectService, Project, ProjectCreateDto, ProjectStatus } from '../../../core/services/project.service';
+import { ProjectService, ProjectCreateDto, ProjectStatus } from '../../../core/services/project.service';
 import { AuthStore } from '../../../core/auth/auth.store';
-import { OrganizationService } from '../../../core/services/organisation.service';
+import { Org, OrganizationService } from '../../../core/services/organisation.service';
 
 @Component({
   selector: 'app-project',
@@ -20,21 +26,17 @@ export class ProjectComponent implements OnInit {
   private auth = inject(AuthStore);
   private orgsvc = inject(OrganizationService);
 
-  ngOnInit(): void {
-    this.orgId.set(0);
-    this.getListByOg(this.orgId());
-  }
-
-
-  // UI state
+  // UI state (signals)
   loading = signal(false);
   error = signal<string | null>(null);
-  projects: any = [];
-  organizations: any = [];
 
-  // récup token + 1ère org de l'utilisateur (adapte selon la forme de ta session)
+  // Données (tableaux simples)
+  projects: any[] = [];
+  organizationsByUser: Org[] = [];
+
+  // Filtres (signals)
   token = signal<string>('');
-  orgId = signal<number>(0);
+  orgId = signal<number>(0); // 0 = "Toutes"
 
   // Formulaire création
   form = this.fb.nonNullable.group({
@@ -45,65 +47,76 @@ export class ProjectComponent implements OnInit {
   });
 
   constructor() {
-    // synchroniser token & org depuis AuthStore
+    // Synchroniser token & org depuis AuthStore
     effect(() => {
-      const session = this.auth.session(); // ex: { token, user: { organization: [...] } }
-      this.orgsvc.getOrgByUserId(session?.user?.id).subscribe((res: any) => {
-        this.organizations = res.data;
-        console.log(this.organizations);
-      })
+      const session = this.auth.session(); // supposé être un signal côté store
+      const userId = session?.user?.id;
+
       if (session?.token) this.token.set(session.token);
+
+      // On ne tire l’API qu’avec un userId valide
+      if (typeof userId === 'number' && userId > 0) {
+        this.getOrgByUserId(userId);
+      }
     });
   }
 
-  getListByOg(orgId: number) {
-    console.log("~~~", orgId);
+  ngOnInit(): void {
+    // par défaut → toutes orgs = 0
+    this.orgId.set(0);
+    this.getListByOrg(this.orgId());
+  }
 
+  /** TrackBy utilitaire */
+  trackById = (_: number, o: { id: number }) => o.id;
 
+  /** Charger projets par orgId (0 = toutes) */
+  getListByOrg(orgId: number) {
     this.loading.set(true);
     this.error.set(null);
 
     this.svc.listByOrg(orgId).subscribe({
       next: (res) => {
-        this.projects = res.data ?? [];
-        console.log("projects", res);
-
+        this.projects = res?.data ?? [];
         this.loading.set(false);
       },
       error: (err) => {
+        console.error(err);
         this.error.set('Impossible de charger les projets');
         this.loading.set(false);
-        console.error(err);
       }
     });
-
   }
 
+  /** Soumission création projet */
   submit() {
     if (this.form.invalid || !this.token()) {
       this.form.markAllAsTouched();
       return;
     }
+
     this.loading.set(true);
     this.error.set(null);
 
     const dto: ProjectCreateDto = this.form.getRawValue();
 
     this.svc.create(dto).subscribe({
-      next: (res) => {
-        // reset léger (on laisse organizationID et status)
+      next: () => {
+        // Reset partiel (on garde org & status)
         this.form.patchValue({ name: '', description: '' });
         this.loading.set(false);
-        this.getListByOg(this.orgId());
+        // Recharger la liste
+        this.getListByOrg(this.orgId());
       },
       error: (err) => {
+        console.error(err);
         this.error.set('Création du projet échouée');
         this.loading.set(false);
-        console.error(err);
       }
     });
   }
 
+  /** Badge CSS par status */
   statusBadge(s: ProjectStatus): string {
     switch (s) {
       case 'PLANNED': return 'badge text-bg-secondary';
@@ -114,12 +127,40 @@ export class ProjectComponent implements OnInit {
     }
   }
 
+  /** Changement d’org pour filtrer la liste */
   onOrgChange(id: number) {
     this.orgId.set(id);
-    this.getListByOg(this.orgId());
+    this.getListByOrg(id);
   }
 
+  /** Bouton "Rafraîchir" */
   fetch() {
-    this.getListByOg(this.orgId());
+    this.getListByOrg(this.orgId());
+  }
+
+  /** Charger orgs de l’utilisateur + initialiser le formulaire */
+  getOrgByUserId(userId: number) {
+    this.orgsvc.getOrgByUserId(userId).subscribe({
+      next: (res: any) => {
+        this.organizationsByUser = res?.data ?? [];
+
+        // Si aucune org → désactiver la création (org obligatoire)
+        if (!this.organizationsByUser.length) {
+          this.form.patchValue({ organizationID: 0 });
+          return;
+        }
+
+        // Si l’org du formulaire est 0, auto-sélectionner la 1ère
+        const currentOrgId = this.form.controls.organizationID.value;
+        if (!currentOrgId || currentOrgId === 0) {
+          const firstId = this.organizationsByUser[0].id;
+          this.form.patchValue({ organizationID: firstId });
+        }
+      },
+      error: (err: any) => {
+        console.error(err);
+        this.error.set('Impossible de charger vos organisations');
+      }
+    });
   }
 }

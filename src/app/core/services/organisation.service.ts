@@ -35,6 +35,6 @@ export class OrganizationService {
 
   getOrgByUserId(userId: number): any {
     const params = new HttpParams().set('userId', String(userId));
-    return this.http.get<any>(`${this.base}/org/byIdUser`, { params });
+    return this.http.get<ApiResponse<Org[]>>(`${this.base}/org/byIdUser`, { params });
   }
 }

@@ -15,7 +15,7 @@ import { AuthService } from '../../core/auth/auth.service';
   styleUrl: './user.css',
 })
 export class User {
-  sidebarOpen = signal(true);
+  sidebarOpen = signal(false);
   toggle() { this.sidebarOpen.update(v => !v); }
   constructor(private auth: AuthService) {
     effect(() => {
